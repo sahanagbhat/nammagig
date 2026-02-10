@@ -12,6 +12,7 @@ import { FarmerLanding } from './pages/Register/FarmerLanding';
 import { CreatorRegistration } from './pages/Register/CreatorRegistration';
 import { TouristRegistration } from './pages/Register/TouristRegistration';
 import { Gigs } from './pages/Gigs';
+import { ProfileSetup } from './pages/ProfileSetup';
 
 import { GOOGLE_CLIENT_ID } from './config';
 
@@ -55,6 +56,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Gigs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile-setup"
+              element={
+                <ProtectedRoute>
+                  <ProfileSetup />
                 </ProtectedRoute>
               }
             />

@@ -1,9 +1,9 @@
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { authAPI } from '../services/api';
+// import { authAPI } from '../services/api'; // Not used yet
 import toast from 'react-hot-toast';
-
+import { jwtDecode } from "jwt-decode";
 import { GOOGLE_CLIENT_ID } from '../config';
 
 export const GoogleLoginButton = () => {
@@ -17,19 +17,21 @@ export const GoogleLoginButton = () => {
         return;
       }
 
-      const mockResponse = {
-        access_token: credentialResponse.credential,
-        user: {
-          id: '1',
-          email: 'user@example.com',
-          name: 'User',
-          profileComplete: false,
-        },
+      // Decode the Google JWT to get user info
+      const decoded: any = jwtDecode(credentialResponse.credential);
+      console.log("Logged in user:", decoded);
+
+      const user = {
+        id: decoded.sub,
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture,
+        profileComplete: false, // User needs to select role/complete profile
       };
 
-      login(mockResponse.access_token, mockResponse.user);
-      toast.success('Login successful!');
-      navigate('/dashboard');
+      login(credentialResponse.credential, user);
+      toast.success(`Welcome, ${decoded.name}!`);
+      navigate('/profile-setup');
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
@@ -40,26 +42,25 @@ export const GoogleLoginButton = () => {
     toast.error('Google login failed. Please try again.');
   };
 
+  // If Client ID is missing, show error (though user provided it now)
   if (!GOOGLE_CLIENT_ID) {
     return (
-      <div className="text-center text-sm text-gray-700">
-        <p className="mb-2">Google Sign-In is not configured.</p>
-        <p className="mb-2">To enable it, create a <strong>.env</strong> file in the <strong>nomad-matcher</strong> folder and add:</p>
-        <pre className="bg-gray-100 p-2 rounded">VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com</pre>
-        <p className="mt-2">Then restart the dev server.</p>
+      <div className="text-red-500 text-sm p-4 border border-red-200 rounded bg-red-50">
+        Error: Google Client ID is missing. Please check .env file.
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center">
+    <div className="w-full flex justify-center">
       <GoogleLogin
         onSuccess={handleSuccess}
         onError={handleError}
-        theme="filled_blue"
+        theme="outline"
         size="large"
         text="signin_with"
         shape="rectangular"
+        width="100%"
       />
     </div>
   );

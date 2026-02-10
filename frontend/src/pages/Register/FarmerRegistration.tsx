@@ -8,6 +8,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { FileUpload } from '../../components/FileUpload';
 import { MultiSelect } from '../../components/MultiSelect';
 import { registrationAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const farmerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -31,6 +32,7 @@ export const FarmerRegistration = () => {
   const [aadhaarPhoto, setAadhaarPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { token, user, login } = useAuth();
 
   const {
     register,
@@ -38,6 +40,7 @@ export const FarmerRegistration = () => {
     formState: { errors },
     watch,
     setValue,
+    trigger,
   } = useForm<FarmerFormData>({
     resolver: zodResolver(farmerSchema),
     defaultValues: {
@@ -54,7 +57,7 @@ export const FarmerRegistration = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      
+
       Object.entries(data).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
@@ -67,8 +70,13 @@ export const FarmerRegistration = () => {
       if (aadhaarPhoto) formData.append('aadhaarPhoto', aadhaarPhoto);
 
       await registrationAPI.registerFarmer(formData);
+
+      if (user && token) {
+        login(token, { ...user, role: 'farmer' });
+      }
+
       toast.success('Profile created successfully!');
-      navigate('/gigs');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('Registration failed. Please try again.');
@@ -77,9 +85,20 @@ export const FarmerRegistration = () => {
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+  const nextStep = async () => {
+    let fieldsToValidate: (keyof FarmerFormData)[] = [];
+    if (currentStep === 0) {
+      fieldsToValidate = ['name', 'mobile', 'email'];
+    } else if (currentStep === 1) {
+      fieldsToValidate = ['farmLocation', 'farmType', 'activities', 'languages'];
+    }
+
+    const isStepValid = await trigger(fieldsToValidate);
+
+    if (isStepValid) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -104,7 +123,7 @@ export const FarmerRegistration = () => {
               steps={steps}
             />
 
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={(e) => e.preventDefault()}>
               {/* Step 1: Personal Info */}
               {currentStep === 0 && (
                 <div className="space-y-4">
@@ -194,7 +213,7 @@ export const FarmerRegistration = () => {
                     label="Activities Offered *"
                     options={ACTIVITIES}
                     selected={activities}
-                    onChange={(selected) => setValue('activities', selected)}
+                    onChange={(selected) => setValue('activities', selected, { shouldValidate: true })}
                     error={errors.activities?.message}
                   />
 
@@ -202,7 +221,7 @@ export const FarmerRegistration = () => {
                     label="Languages Spoken *"
                     options={LANGUAGES}
                     selected={languages}
-                    onChange={(selected) => setValue('languages', selected)}
+                    onChange={(selected) => setValue('languages', selected, { shouldValidate: true })}
                     error={errors.languages?.message}
                   />
                 </div>
@@ -253,7 +272,8 @@ export const FarmerRegistration = () => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit(onSubmit)}
                     disabled={loading}
                     className="btn-primary ml-auto"
                   >

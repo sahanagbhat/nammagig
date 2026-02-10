@@ -8,6 +8,7 @@ import { ProgressBar } from '../../components/ProgressBar';
 import { FileUpload } from '../../components/FileUpload';
 import { MultiSelect } from '../../components/MultiSelect';
 import { registrationAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const creatorSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -29,6 +30,7 @@ export const CreatorRegistration = () => {
   const [aadhaarPhoto, setAadhaarPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { token, user, login } = useAuth();
 
   const {
     register,
@@ -36,6 +38,7 @@ export const CreatorRegistration = () => {
     formState: { errors },
     watch,
     setValue,
+    trigger,
   } = useForm<CreatorFormData>({
     resolver: zodResolver(creatorSchema),
     defaultValues: {
@@ -52,7 +55,7 @@ export const CreatorRegistration = () => {
     setLoading(true);
     try {
       const formData = new FormData();
-      
+
       Object.entries(data).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
@@ -64,8 +67,13 @@ export const CreatorRegistration = () => {
       if (aadhaarPhoto) formData.append('aadhaarPhoto', aadhaarPhoto);
 
       await registrationAPI.registerCreator(formData);
+
+      if (user && token) {
+        login(token, { ...user, role: 'creator' });
+      }
+
       toast.success('Profile created successfully!');
-      navigate('/gigs');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('Registration failed. Please try again.');
@@ -74,9 +82,20 @@ export const CreatorRegistration = () => {
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+  const nextStep = async () => {
+    let fieldsToValidate: (keyof CreatorFormData)[] = [];
+    if (currentStep === 0) {
+      fieldsToValidate = ['name', 'mobile', 'email'];
+    } else if (currentStep === 1) {
+      fieldsToValidate = ['instagramUrl', 'youtubeUrl'];
+    }
+
+    const isStepValid = await trigger(fieldsToValidate);
+
+    if (isStepValid) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -101,7 +120,7 @@ export const CreatorRegistration = () => {
               steps={steps}
             />
 
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={(e) => e.preventDefault()}>
               {/* Step 1: Personal Info */}
               {currentStep === 0 && (
                 <div className="space-y-4">
@@ -206,7 +225,7 @@ export const CreatorRegistration = () => {
                     label="Your Skills *"
                     options={SKILLS}
                     selected={skills}
-                    onChange={(selected) => setValue('skills', selected)}
+                    onChange={(selected) => setValue('skills', selected, { shouldValidate: true })}
                     error={errors.skills?.message}
                   />
 
@@ -214,7 +233,7 @@ export const CreatorRegistration = () => {
                     label="Languages Spoken *"
                     options={LANGUAGES}
                     selected={languages}
-                    onChange={(selected) => setValue('languages', selected)}
+                    onChange={(selected) => setValue('languages', selected, { shouldValidate: true })}
                     error={errors.languages?.message}
                   />
                 </div>
@@ -242,7 +261,8 @@ export const CreatorRegistration = () => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit(onSubmit)}
                     disabled={loading}
                     className="btn-primary ml-auto"
                   >

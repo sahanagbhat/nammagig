@@ -48,7 +48,7 @@ export const authAPI = {
     const response = await api.post('/auth/google', { code });
     return response.data;
   },
-  
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -65,7 +65,7 @@ export const registrationAPI = {
     });
     return response.data;
   },
-  
+
   registerCreator: async (data: FormData) => {
     const response = await api.post('/api/register/creator', data, {
       headers: {
@@ -74,7 +74,7 @@ export const registrationAPI = {
     });
     return response.data;
   },
-  
+
   registerTourist: async (data: any) => {
     const response = await api.post('/api/register/tourist', data);
     return response.data;
@@ -91,6 +91,22 @@ export const uploadAPI = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data;
+  },
+};
+
+// Match endpoints
+export const matchAPI = {
+  getFarmMatches: async (farmData: any) => {
+    const response = await api.post('/match/farm', farmData);
+    return response.data;
+  },
+  getCreatorMatches: async (creatorData: any) => {
+    const response = await api.post('/match/creator', creatorData);
+    return response.data;
+  },
+  getTouristMatches: async (touristData: any) => {
+    const response = await api.post('/api/match/tourist', touristData);
     return response.data;
   },
 };

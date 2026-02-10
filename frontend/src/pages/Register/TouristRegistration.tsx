@@ -7,16 +7,25 @@ import toast from 'react-hot-toast';
 import { ProgressBar } from '../../components/ProgressBar';
 import { MultiSelect } from '../../components/MultiSelect';
 import { registrationAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const touristSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   mobile: z.string().regex(/^[0-9]{10}$/, 'Mobile must be 10 digits'),
   email: z.string().email('Invalid email address'),
   country: z.string().min(2, 'Country is required'),
-  expectations: z.string().min(10, 'Please provide more details about your expectations'),
-  durationDays: z.number().min(1, 'Duration must be at least 1 day').max(30, 'Maximum 30 days'),
-  preferredDate: z.string().optional(),
+  locationPreference: z.string().min(2, 'Location is required'),
+  farmTypePreference: z.string().optional(),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().min(1, 'End date is required'),
   activities: z.array(z.string()).min(1, 'Select at least one activity'),
+}).refine((data) => {
+  const start = new Date(data.startDate);
+  const end = new Date(data.endDate);
+  return end >= start;
+}, {
+  message: "End date must be after start date",
+  path: ["endDate"],
 });
 
 type TouristFormData = z.infer<typeof touristSchema>;
@@ -27,18 +36,21 @@ export const TouristRegistration = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { token, user, login } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
+    trigger,
     setValue,
   } = useForm<TouristFormData>({
     resolver: zodResolver(touristSchema),
     defaultValues: {
       activities: [],
-      durationDays: 3,
+      locationPreference: '',
+      farmTypePreference: '',
     },
   });
 
@@ -49,8 +61,13 @@ export const TouristRegistration = () => {
     setLoading(true);
     try {
       await registrationAPI.registerTourist(data);
+
+      if (user && token) {
+        login(token, { ...user, role: 'tourist' });
+      }
+
       toast.success('Profile created successfully!');
-      navigate('/gigs');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       toast.error('Registration failed. Please try again.');
@@ -59,9 +76,18 @@ export const TouristRegistration = () => {
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+  const nextStep = async () => {
+    let fieldsToValidate: (keyof TouristFormData)[] = [];
+    if (currentStep === 0) {
+      fieldsToValidate = ['name', 'mobile', 'email', 'country'];
+    }
+
+    const isStepValid = await trigger(fieldsToValidate);
+
+    if (isStepValid) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -86,7 +112,7 @@ export const TouristRegistration = () => {
               steps={steps}
             />
 
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={(e) => e.preventDefault()}>
               {/* Step 1: Personal Info */}
               {currentStep === 0 && (
                 <div className="space-y-4">
@@ -155,55 +181,72 @@ export const TouristRegistration = () => {
               {/* Step 2: Trip Details */}
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      What are you looking for? *
-                    </label>
-                    <textarea
-                      {...register('expectations')}
-                      rows={4}
-                      className="input-field"
-                      placeholder="Tell us about your ideal agritourism experience..."
-                    />
-                    {errors.expectations && (
-                      <p className="mt-1 text-sm text-red-600">{errors.expectations.message}</p>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Location Preference *
+                      </label>
+                      <input
+                        {...register('locationPreference')}
+                        type="text"
+                        className="input-field"
+                        placeholder="Where are you going?"
+                      />
+                      {errors.locationPreference && (
+                        <p className="mt-1 text-sm text-red-600">{errors.locationPreference.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Farm Type Preference
+                      </label>
+                      <input
+                        {...register('farmTypePreference')}
+                        type="text"
+                        className="input-field"
+                        placeholder="Farm name, description..."
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Duration (Days) *
-                    </label>
-                    <input
-                      {...register('durationDays', { valueAsNumber: true })}
-                      type="number"
-                      min="1"
-                      max="30"
-                      className="input-field"
-                      placeholder="Number of days"
-                    />
-                    {errors.durationDays && (
-                      <p className="mt-1 text-sm text-red-600">{errors.durationDays.message}</p>
-                    )}
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date *
+                      </label>
+                      <input
+                        {...register('startDate')}
+                        type="date"
+                        className="input-field"
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                      {errors.startDate && (
+                        <p className="mt-1 text-sm text-red-600">{errors.startDate.message}</p>
+                      )}
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preferred Date
-                    </label>
-                    <input
-                      {...register('preferredDate')}
-                      type="date"
-                      className="input-field"
-                      min={new Date().toISOString().split('T')[0]}
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        End Date *
+                      </label>
+                      <input
+                        {...register('endDate')}
+                        type="date"
+                        className="input-field"
+                        min={watch('startDate') || new Date().toISOString().split('T')[0]}
+                      />
+                      {errors.endDate && (
+                        <p className="mt-1 text-sm text-red-600">{errors.endDate.message}</p>
+                      )}
+                    </div>
                   </div>
 
                   <MultiSelect
                     label="Activities of Interest *"
                     options={ACTIVITIES}
                     selected={activities}
-                    onChange={(selected) => setValue('activities', selected)}
+                    onChange={(selected) => setValue('activities', selected, { shouldValidate: true })}
                     error={errors.activities?.message}
                   />
 
@@ -237,7 +280,8 @@ export const TouristRegistration = () => {
                   </button>
                 ) : (
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit(onSubmit)}
                     disabled={loading}
                     className="btn-primary ml-auto"
                   >
