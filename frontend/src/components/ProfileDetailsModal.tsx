@@ -1,4 +1,5 @@
-import { X, Calendar, MapPin, Star, User, Phone, CheckCircle } from 'lucide-react';
+import { X, Calendar, MapPin, Star, User, Phone, CheckCircle, Instagram, Youtube } from 'lucide-react';
+import { API_URL } from '../services/api';
 
 interface ProfileDetailsModalProps {
     isOpen: boolean;
@@ -29,10 +30,18 @@ export const ProfileDetailsModal = ({ isOpen, onClose, profile, onBook }: Profil
                 <div className="px-8 pb-8 -mt-12 relative">
                     {/* Profile Header */}
                     <div className="flex flex-col md:flex-row gap-6 items-start">
-                        <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg">
-                            <div className="w-full h-full bg-surface-100 rounded-xl flex items-center justify-center">
-                                <User className="w-12 h-12 text-primary-300" />
-                            </div>
+                        <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg overflow-hidden">
+                            {profile.image ? (
+                                <img
+                                    src={`${API_URL}${profile.image}`}
+                                    alt={profile.name || "Profile"}
+                                    className="w-full h-full object-cover rounded-xl"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-surface-100 rounded-xl flex items-center justify-center">
+                                    <User className="w-12 h-12 text-primary-300" />
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1 pt-14 md:pt-14"> {/* Adjusted padding */}
                             <div className="flex justify-between items-start">
@@ -107,6 +116,30 @@ export const ProfileDetailsModal = ({ isOpen, onClose, profile, onBook }: Profil
                                             <span>{profile.mobile}</span>
                                         </div>
                                     )}
+                                    <div className="flex gap-3 pt-2">
+                                        {profile.instagramUrl && (
+                                            <a
+                                                href={profile.instagramUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-pink-50 text-pink-600 rounded-lg text-sm hover:bg-pink-100 transition-colors"
+                                            >
+                                                <Instagram className="w-4 h-4" />
+                                                <span>Instagram</span>
+                                            </a>
+                                        )}
+                                        {profile.youtubeUrl && (
+                                            <a
+                                                href={profile.youtubeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm hover:bg-red-100 transition-colors"
+                                            >
+                                                <Youtube className="w-4 h-4" />
+                                                <span>YouTube</span>
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

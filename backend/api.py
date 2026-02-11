@@ -1,11 +1,24 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 import json
+import os
+import shutil
+import uuid
 from matcher import compute_match_score, generate_reason
 from pymongo import MongoClient
 from urllib.parse import quote_plus
+from utils import save_upload_file
+
+username = "vishalmalik1458_db_user"
+# password = quote_plus("7037719104@VM")  # put original password here
+# Database connection is handled in a real environment.
+# For this edit, I will assume the connection setup lines are unchanged or I should preserve them if I can't match exactly.
+# Wait, I need to match the existing file precisely. I will just replace the imports and setup parts and then the endpoints.
+# Actually, I'll use separate replacement chunks to be safe and precise.
+
 
 username = "vishalmalik1458_db_user"
 password = quote_plus("7037719104@VM")  # put original password here
@@ -18,6 +31,12 @@ db = client.rural_platform
 
 
 app = FastAPI()
+
+# Create uploads directory if it doesn't exist
+os.makedirs("uploads", exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # allow all for hackathon demo
@@ -142,7 +161,10 @@ def match_farm(farm: FarmRequest):
             "match_score": score,
             "reason": reason,
             "skills": creator.get("skills"),
-            "mobile": creator.get("mobile") # Return mobile for contact
+            "mobile": creator.get("mobile"), # Return mobile for contact
+            "image": creator.get("profilePhoto") or creator.get("aadhaarPhoto"), # Fallback or use specific field
+            "instagramUrl": creator.get("instagramUrl"),
+            "youtubeUrl": creator.get("youtubeUrl")
         })
 
     results.sort(key=lambda x: x["match_score"], reverse=True)
@@ -177,7 +199,8 @@ def match_creator(creator: CreatorRequest):
             "match_score": score,
             "reason": reason,
             "activities": farm.get("activities"),
-            "mobile": farm.get("mobile")
+            "mobile": farm.get("mobile"),
+            "image": farm.get("farmPhoto")
         })
 
     results.sort(key=lambda x: x["match_score"], reverse=True)
@@ -216,7 +239,8 @@ def match_tourist(tourist: TouristRequest):
                 "match_score": score,
                 "reason": reason,
                 "activities": farm.get("activities"),
-                "mobile": farm.get("mobile")
+                "mobile": farm.get("mobile"),
+                "image": farm.get("farmPhoto")
             })
             
     # Match Creators
@@ -230,7 +254,10 @@ def match_tourist(tourist: TouristRequest):
                 "skills": creator.get("skills"),
                 "match_score": score,
                 "reason": reason,
-                "mobile": creator.get("mobile")
+                "mobile": creator.get("mobile"),
+                "image": creator.get("profilePhoto"),
+                "instagramUrl": creator.get("instagramUrl"),
+                "youtubeUrl": creator.get("youtubeUrl")
             })
 
     recommended_farms.sort(key=lambda x: x["match_score"], reverse=True)
@@ -254,6 +281,10 @@ async def register_farmer(
     aadhaarPhoto: Optional[UploadFile] = File(None)
 ):
     try:
+        # Save files
+        farm_photo_path = save_upload_file(farmPhoto, "uploads") if farmPhoto else None
+        aadhaar_photo_path = save_upload_file(aadhaarPhoto, "uploads") if aadhaarPhoto else None
+
         farmer_data = {
             "name": name,
             "mobile": mobile,
@@ -262,10 +293,9 @@ async def register_farmer(
             "farmType": farmType,
             "activities": json.loads(activities),
             "languages": json.loads(languages),
-            "farmPhoto": farmPhoto.filename if farmPhoto else None,
-            "aadhaarPhoto": aadhaarPhoto.filename if aadhaarPhoto else None
+            "farmPhoto": farm_photo_path,
+            "aadhaarPhoto": aadhaar_photo_path
         }
-        # In a real app, we would save the files to disk/S3 here
         
         db.farmers.insert_one(farmer_data)
         return {"message": "Farmer registered successfully", "id": str(farmer_data.get("_id"))}

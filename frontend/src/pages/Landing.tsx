@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Tractor, Camera, MapPin, ArrowRight } from 'lucide-react';
 import { GoogleLoginButton } from '../components/GoogleLoginButton';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import toast from 'react-hot-toast';
 
 export const Landing = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login');
+  const { t } = useLanguage();
 
   // Form State
   const [email, setEmail] = useState('');
@@ -81,31 +84,30 @@ export const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60"></div>
         </div>
 
+        {/* Top Right Language Switcher */}
+        <div className="absolute top-6 right-6 z-20">
+          <LanguageSwitcher />
+        </div>
+
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto glass-dark rounded-3xl p-8 md:p-12 animate-fade-in-up">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white drop-shadow-md">
-              Discover Rural Karnataka
+              {t('hero.title')}
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-earth-100 font-light max-w-2xl mx-auto drop-shadow-sm">
-              Connecting content creators and tourists with authentic farm experiences.
+              {t('hero.subtitle')}
             </p>
             <button
               type="button"
               onClick={() => setShowLogin(true)}
               className="btn-primary text-lg px-10 py-4 inline-flex items-center space-x-2 bg-white text-primary-900 hover:bg-earth-100 border-none shadow-2xl transform hover:scale-105 transition-transform"
             >
-              <span>Start Your Journey</span>
+              <span>{t('hero.cta')}</span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-8 h-12 rounded-full border-2 border-white flex justify-center pt-2">
-            <div className="w-1 h-3 bg-white rounded-full"></div>
-          </div>
-        </div>
       </div>
 
       {/* Login Modal */}
@@ -119,14 +121,14 @@ export const Landing = () => {
                 onClick={() => setAuthTab('login')}
                 className={`flex-1 py-4 text-center font-semibold transition-colors ${authTab === 'login' ? 'text-primary-900 border-b-2 border-primary-600 bg-white' : 'text-earth-500 hover:text-primary-900 bg-surface-50'}`}
               >
-                Login
+                {t('nav.login')}
               </button>
               <button
                 type="button"
                 onClick={() => setAuthTab('register')}
                 className={`flex-1 py-4 text-center font-semibold transition-colors ${authTab === 'register' ? 'text-primary-900 border-b-2 border-primary-600 bg-white' : 'text-earth-500 hover:text-primary-900 bg-surface-50'}`}
               >
-                Register
+                {t('nav.register')}
               </button>
             </div>
 
@@ -141,8 +143,8 @@ export const Landing = () => {
                 <>
                   {/* Welcome Text */}
                   <div className="text-center mb-8">
-                    <h3 className="text-xl font-bold text-gray-900">Welcome Back</h3>
-                    <p className="text-earth-600 text-sm">Sign in to continue your workation journey.</p>
+                    <h3 className="text-xl font-bold text-gray-900">{t('auth.welcomeBack')}</h3>
+                    <p className="text-earth-600 text-sm">{t('auth.signInText')}</p>
                   </div>
 
                   {/* Login Form */}
@@ -150,7 +152,7 @@ export const Landing = () => {
                     <div>
                       <input
                         type="email"
-                        placeholder="Email address"
+                        placeholder={t('auth.emailPlaceholder')}
                         className="input-field"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -159,7 +161,7 @@ export const Landing = () => {
                     <div>
                       <input
                         type="password"
-                        placeholder="Password"
+                        placeholder={t('auth.passwordPlaceholder')}
                         className="input-field"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -173,12 +175,12 @@ export const Landing = () => {
                       onClick={handleEmailLogin}
                       className="w-full btn-primary bg-primary-600 hover:bg-primary-700 text-white rounded-lg py-3 font-semibold shadow-none"
                     >
-                      Login with Email
+                      {t('auth.loginBtn')}
                     </button>
 
                     <div className="relative flex items-center py-2">
                       <div className="flex-grow border-t border-earth-200"></div>
-                      <span className="flex-shrink-0 mx-4 text-earth-400 text-sm">or</span>
+                      <span className="flex-shrink-0 mx-4 text-earth-400 text-sm">{t('auth.or')}</span>
                       <div className="flex-grow border-t border-earth-200"></div>
                     </div>
 
@@ -191,8 +193,8 @@ export const Landing = () => {
                 <>
                   {/* Register Text */}
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">Create Account</h3>
-                    <p className="text-earth-600 text-sm">Join the community today.</p>
+                    <h3 className="text-xl font-bold text-gray-900">{t('auth.createAccount')}</h3>
+                    <p className="text-earth-600 text-sm">{t('auth.joinText')}</p>
                   </div>
 
                   {/* Register Form */}
@@ -200,7 +202,7 @@ export const Landing = () => {
                     <div>
                       <input
                         type="text"
-                        placeholder="Full Name"
+                        placeholder={t('auth.namePlaceholder')}
                         className="input-field"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -209,7 +211,7 @@ export const Landing = () => {
                     <div>
                       <input
                         type="email"
-                        placeholder="Email address"
+                        placeholder={t('auth.emailPlaceholder')}
                         className="input-field"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -218,7 +220,7 @@ export const Landing = () => {
                     <div>
                       <input
                         type="password"
-                        placeholder="Password"
+                        placeholder={t('auth.passwordPlaceholder')}
                         className="input-field"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -233,7 +235,7 @@ export const Landing = () => {
                           className={`text-xs py-2 px-1 border rounded-lg capitalize transition-colors ${selectedRole === role ? 'bg-primary-600 text-white border-primary-600' : 'hover:bg-earth-50 border-earth-200 text-earth-700'}`}
                           onClick={() => setSelectedRole(role as any)}
                         >
-                          {role}
+                          {t(`auth.roles.${role}`)}
                         </button>
                       ))}
                     </div>
@@ -245,12 +247,12 @@ export const Landing = () => {
                       onClick={handleRegister}
                       className="w-full btn-primary bg-primary-600 hover:bg-primary-700 text-white rounded-lg py-3 font-semibold shadow-none"
                     >
-                      Create Account
+                      {t('auth.registerBtn')}
                     </button>
 
                     <div className="relative flex items-center py-2">
                       <div className="flex-grow border-t border-earth-200"></div>
-                      <span className="flex-shrink-0 mx-4 text-earth-400 text-sm">or</span>
+                      <span className="flex-shrink-0 mx-4 text-earth-400 text-sm">{t('auth.or')}</span>
                       <div className="flex-grow border-t border-earth-200"></div>
                     </div>
 
@@ -272,7 +274,7 @@ export const Landing = () => {
                 onClick={() => setShowLogin(false)}
                 className="mt-4 w-full text-center text-sm text-earth-500 hover:text-earth-800 p-2"
               >
-                Cancel
+                {t('auth.cancel')}
               </button>
             </div>
           </div>
@@ -284,9 +286,9 @@ export const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-primary-900 mb-4">
-              Join the Ecosystem
+              {t('landing.joinEcosystem')}
             </h2>
-            <p className="text-lg text-earth-600 max-w-2xl mx-auto">Choose your role to get started.</p>
+            <p className="text-lg text-earth-600 max-w-2xl mx-auto">{t('landing.chooseRole')}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -300,12 +302,12 @@ export const Landing = () => {
                   <Tractor className="h-12 w-12 text-primary-700" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-primary-900">Farmer</h3>
+              <h3 className="text-2xl font-bold mb-3 text-primary-900">{t('landing.farmerCard.title')}</h3>
               <p className="text-earth-600 mb-6 leading-relaxed">
-                List your farm for content shoots and tourist experiences. Earn extra income.
+                {t('landing.farmerCard.desc')}
               </p>
               <span className="text-primary-700 font-semibold group-hover:underline flex items-center justify-center gap-2">
-                Join as Farmer <ArrowRight className="w-4 h-4" />
+                {t('landing.farmerCard.cta')} <ArrowRight className="w-4 h-4" />
               </span>
             </div>
 
@@ -319,12 +321,12 @@ export const Landing = () => {
                   <Camera className="h-12 w-12 text-earth-700" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-primary-900">Creator</h3>
+              <h3 className="text-2xl font-bold mb-3 text-primary-900">{t('landing.creatorCard.title')}</h3>
               <p className="text-earth-600 mb-6 leading-relaxed">
-                Find unique farm locations for your content styling and portfolios.
+                {t('landing.creatorCard.desc')}
               </p>
               <span className="text-earth-700 font-semibold group-hover:underline flex items-center justify-center gap-2">
-                Join as Creator <ArrowRight className="w-4 h-4" />
+                {t('landing.creatorCard.cta')} <ArrowRight className="w-4 h-4" />
               </span>
             </div>
 
@@ -338,12 +340,12 @@ export const Landing = () => {
                   <MapPin className="h-12 w-12 text-primary-700" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-primary-900">Tourist</h3>
+              <h3 className="text-2xl font-bold mb-3 text-primary-900">{t('landing.touristCard.title')}</h3>
               <p className="text-earth-600 mb-6 leading-relaxed">
-                Experience authentic agritourism. Stay, tour, and support local communities.
+                {t('landing.touristCard.desc')}
               </p>
               <span className="text-primary-700 font-semibold group-hover:underline flex items-center justify-center gap-2">
-                Join as Tourist <ArrowRight className="w-4 h-4" />
+                {t('landing.touristCard.cta')} <ArrowRight className="w-4 h-4" />
               </span>
             </div>
           </div>
@@ -354,7 +356,7 @@ export const Landing = () => {
       <div className="bg-white py-24 border-t border-earth-100">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold text-center mb-16 text-primary-900">
-            How It Works
+            {t('landing.howItWorks.title')}
           </h2>
 
           <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
@@ -362,9 +364,9 @@ export const Landing = () => {
               <div className="bg-primary-100 text-primary-800 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-sm rotate-3 hover:rotate-6 transition-transform">
                 1
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">Sign Up</h3>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t('landing.howItWorks.step1.title')}</h3>
               <p className="text-earth-600 leading-relaxed">
-                Create your profile as a farmer, creator, or tourist using Google sign-in.
+                {t('landing.howItWorks.step1.desc')}
               </p>
             </div>
 
@@ -372,9 +374,9 @@ export const Landing = () => {
               <div className="bg-primary-100 text-primary-800 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-sm -rotate-3 hover:-rotate-6 transition-transform">
                 2
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">Get Matched</h3>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t('landing.howItWorks.step2.title')}</h3>
               <p className="text-earth-600 leading-relaxed">
-                Our AI algorithm finds the perfect opportunities based on your preferences.
+                {t('landing.howItWorks.step2.desc')}
               </p>
             </div>
 
@@ -382,9 +384,9 @@ export const Landing = () => {
               <div className="bg-primary-100 text-primary-800 w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-sm rotate-3 hover:rotate-6 transition-transform">
                 3
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">Connect</h3>
+              <h3 className="text-xl font-bold mb-3 text-gray-900">{t('landing.howItWorks.step3.title')}</h3>
               <p className="text-earth-600 leading-relaxed">
-                Book experiences, create content, and build meaningful connections.
+                {t('landing.howItWorks.step3.desc')}
               </p>
             </div>
           </div>

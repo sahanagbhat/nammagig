@@ -13,77 +13,82 @@ import { CreatorRegistration } from './pages/Register/CreatorRegistration';
 import { TouristRegistration } from './pages/Register/TouristRegistration';
 import { Gigs } from './pages/Gigs';
 import { ProfileSetup } from './pages/ProfileSetup';
+import { LanguageProvider } from './context/LanguageContext';
 
 import { GOOGLE_CLIENT_ID } from './config';
 
 function App() {
-  const AppShell = (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            {/* Make farmer landing and registration public so farmers can register without sign-in */}
-            <Route path="/register/farmer" element={<FarmerLanding />} />
-            <Route path="/register/farmer/register" element={<FarmerRegistration />} />
-            <Route
-              path="/register/creator"
-              element={
-                <ProtectedRoute>
-                  <CreatorRegistration />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/register/tourist"
-              element={
-                <ProtectedRoute>
-                  <TouristRegistration />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/gigs"
-              element={
-                <ProtectedRoute>
-                  <Gigs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile-setup"
-              element={
-                <ProtectedRoute>
-                  <ProfileSetup />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-      <Toaster position="top-right" />
-    </Router>
+  const AppContent = (
+    <LanguageProvider>
+      <AuthProvider>
+        <Router>
+          <div className="flex flex-col min-h-screen">
+            <Toaster position="top-center" />
+            <Navbar />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Make farmer landing and registration public so farmers can register without sign-in */}
+                <Route path="/register/farmer" element={<FarmerLanding />} />
+                <Route path="/register/farmer/register" element={<FarmerRegistration />} />
+                <Route
+                  path="/register/creator"
+                  element={
+                    <ProtectedRoute>
+                      <CreatorRegistration />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/register/tourist"
+                  element={
+                    <ProtectedRoute>
+                      <TouristRegistration />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/gigs"
+                  element={
+                    <ProtectedRoute>
+                      <Gigs />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile-setup"
+                  element={
+                    <ProtectedRoute>
+                      <ProfileSetup />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </main>
+            <Footer /> {/* Added Footer back, as it was in the original AppShell */}
+          </div>
+        </Router>
+      </AuthProvider>
+    </LanguageProvider>
   );
 
   if (GOOGLE_CLIENT_ID) {
     return (
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <AuthProvider>{AppShell}</AuthProvider>
+        {AppContent}
       </GoogleOAuthProvider>
     );
   }
 
-  return <AuthProvider>{AppShell}</AuthProvider>;
+  return AppContent;
 }
 
 export default App;

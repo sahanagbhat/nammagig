@@ -28,6 +28,7 @@ const LANGUAGES = ['Kannada', 'English', 'Hindi', 'Tamil', 'Telugu'];
 export const CreatorRegistration = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [aadhaarPhoto, setAadhaarPhoto] = useState<File | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { token, user, login } = useAuth();
@@ -65,6 +66,7 @@ export const CreatorRegistration = () => {
       });
 
       if (aadhaarPhoto) formData.append('aadhaarPhoto', aadhaarPhoto);
+      if (profilePhoto) formData.append('profilePhoto', profilePhoto);
 
       await registrationAPI.registerCreator(formData);
 
@@ -168,6 +170,12 @@ export const CreatorRegistration = () => {
                       <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
                     )}
                   </div>
+
+                  <FileUpload
+                    label="Profile Photo *"
+                    accept="image/*"
+                    onChange={setProfilePhoto}
+                  />
 
                   <FileUpload
                     label="Aadhaar Card Photo *"
